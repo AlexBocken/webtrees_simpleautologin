@@ -8,10 +8,13 @@ use Fisharebest\Webtrees\Http\RequestHandlers\Logout;
 use Fisharebest\Webtrees\Exceptions\HttpServerErrorException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
-class SimpleAutoLogout extends Logout
+// webtrees 2.2.x marks Logout as `final`, so this handler composes it
+// rather than extending it.
+class SimpleAutoLogout implements RequestHandlerInterface
 {
     // Options for fetching files using GuzzleHTTP
     private const GUZZLE_OPTIONS = [
@@ -35,6 +38,6 @@ class SimpleAutoLogout extends Logout
             $httpclient_response = $httpclient->get($logout_url, self::GUZZLE_OPTIONS);
         }
         
-        return parent::handle($request);
+        return (new Logout())->handle($request);
     }
 }

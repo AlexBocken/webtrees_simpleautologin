@@ -5,40 +5,42 @@ declare(strict_types=1);
 namespace at\fanninger\WebtreesModules\SimpleAutoLogin\Modules;
 
 use Exception;
+use Fisharebest\Webtrees\FlashMessages;
 use Fisharebest\Webtrees\Http\RequestHandlers\LoginPage;
 use Fisharebest\Webtrees\Http\RequestHandlers\HomePage;
 use Fisharebest\Webtrees\Auth;
-use Fisharebest\Webtrees\Carbon;
 use Fisharebest\Webtrees\Contracts\UserInterface;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Log;
 use Fisharebest\Webtrees\Services\UserService;
 use Fisharebest\Webtrees\Services\TreeService;
 use Fisharebest\Webtrees\Session;
+use Fisharebest\Webtrees\Tree;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
+use function redirect;
 use function route;
 
-class SimpleAutoLoginPage extends LoginPage
+// webtrees 2.2.x marks LoginPage as `final`, so this handler composes it
+// rather than extending it.
+class SimpleAutoLoginPage implements RequestHandlerInterface
 {
-	
+    /** @var TreeService */
+    private $tree_service;
+
     /** @var UserService */
     private $user_service;
 
-    /**
-     * LoginController constructor.
-     *
-     * @param UserService    $user_service
-     */
     public function __construct(TreeService $tree_service, UserService $user_service)
     {
-    	parent::__construct($tree_service);
+        $this->tree_service = $tree_service;
         $this->user_service = $user_service;
     }
-	
+
 	public function handle(ServerRequestInterface $request): ResponseInterface
-	{	
+	{
         $tree = $request->getAttribute('tree');
 
         $params = (array) $request->getParsedBody();
@@ -94,7 +96,7 @@ class SimpleAutoLoginPage extends LoginPage
 	            ]));
 	        }
 		}else{
-			return parent::handle($request);
+			return (new LoginPage($this->tree_service))->handle($request);
 		}
 	}
 }
